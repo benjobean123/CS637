@@ -1,15 +1,7 @@
-import scipy.io
+from indian_pines_dataset import IndianPinesDataset
 
-# Load MATLAB file
-mat = scipy.io.loadmat('Indian_pines_corrected.mat')
+ds = IndianPinesDataset()
 
-# Grab the data from the MATLAB file
-data = mat['indian_pines_corrected']
-print(data.shape)
-
-# Load MATLAB file
-mat = scipy.io.loadmat('Indian_pines_gt.mat')
-
-# Grab the data from the MATLAB file
-truth = mat['indian_pines_gt']
-print(truth.shape)
+print(ds)
+print(len(ds))
+print(ds[0])
