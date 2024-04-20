@@ -17,7 +17,8 @@ import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
 # Check if CUDA is available
-train_on_gpu = torch.cuda.is_available()
+#train_on_gpu = torch.cuda.is_available()
+train_on_gpu = False
    
 if train_on_gpu:
     print("CUDA is available! Training on GPU...")
@@ -83,6 +84,9 @@ test_loader = torch.utils.data.DataLoader(test_data,
 classes = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog",
           "horse", "ship", "truck"]
 
+# Should we save the feature map?
+save_map = False
+feature_maps = []
             
 class CNNNet(nn.Module):
     def __init__(self):
@@ -109,6 +113,8 @@ class CNNNet(nn.Module):
         
     def forward(self, x):
         x = self.pool(F.elu(self.conv1(x)))
+        if save_map:
+            feature_maps.append(x)
         x = self.pool(F.elu(self.conv2(x)))
         x = self.pool(F.elu(self.conv3(x)))
         
@@ -122,6 +128,10 @@ class CNNNet(nn.Module):
 
 model = CNNNet()
 print(model)
+
+# note the second airplane sample from the training set for generating feature maps
+second_airplane = [x for x in train_data if x[1] == 0][1]
+#print(second_airplane[0].shape)
 
 # Move tensors to GPU is CUDA is available
 if train_on_gpu:
@@ -165,6 +175,23 @@ for epoch in range(1, n_epochs+1):
         # update training loss
         train_loss += loss.item()*data.size(0)
         
+    # Save the feature map for the second airplane sample
+    save_map = True
+    model(second_airplane[0])
+
+    fig, axes = plt.subplots(nrows=4, ncols=4, figsize=(6, 6))
+    for i, ax in enumerate(axes.flat):
+        if i < 16:
+            ax.imshow(feature_maps[0][i].detach().numpy(), cmap='gray')
+            ax.axis('off')
+        else:
+            ax.axis('off')
+    plt.savefig(f"cifar10-epoch{epoch}.png")
+    plt.close()
+
+    feature_maps.clear()
+    save_map = False
+
     ######################    
     # validate the model #
     ######################
