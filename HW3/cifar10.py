@@ -87,6 +87,10 @@ classes = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog",
 # Should we save the feature map?
 save_map = False
 feature_maps = []
+
+def log_shape(msg,x):
+    if False:
+        print(msg,x.shape)
             
 class CNNNet(nn.Module):
     def __init__(self):
@@ -112,18 +116,34 @@ class CNNNet(nn.Module):
         self.dropout = nn.Dropout(0.25)
         
     def forward(self, x):
-        x = self.pool(F.elu(self.conv1(x)))
+        y = F.elu(self.conv1(x))
+        log_shape('CV1 (pre):',y)
+        x = self.pool(y)
+        log_shape('CV1 (post):',x)
         if save_map:
             feature_maps.append(x)
-        x = self.pool(F.elu(self.conv2(x)))
-        x = self.pool(F.elu(self.conv3(x)))
+
+        y = F.elu(self.conv2(x))
+        log_shape('CV2 (pre):',y)
+        x = self.pool(y)
+        log_shape('CV2 (post):',x)
+
+        y = F.elu(self.conv3(x))
+        log_shape('CV3 (pre):',y)
+        x = self.pool(y)
+        log_shape('CV3 (post):',x)
         
         # Flatten the image
         x = x.view(-1, 64*4*4)
+        log_shape('Flatten:',x)
         x = self.dropout(x)
+        log_shape('Post Drop 1:',x)
         x = F.elu(self.fc1(x))
+        log_shape('Post FC 1:',x)
         x = self.dropout(x)
+        log_shape('Post Drop 2:',x)
         x = self.fc2(x)
+        log_shape('Post FC 2:',x)
         return x
 
 model = CNNNet()
