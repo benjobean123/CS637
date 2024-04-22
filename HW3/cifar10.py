@@ -118,10 +118,10 @@ class CNNNet(nn.Module):
     def forward(self, x):
         y = F.elu(self.conv1(x))
         log_shape('CV1 (pre):',y)
+        if save_map:
+            feature_maps.append(y)
         x = self.pool(y)
         log_shape('CV1 (post):',x)
-        if save_map:
-            feature_maps.append(x)
 
         y = F.elu(self.conv2(x))
         log_shape('CV2 (pre):',y)
