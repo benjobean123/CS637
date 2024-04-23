@@ -13,6 +13,10 @@ import matplotlib.pyplot as plt
 save_map = False
 feature_maps = []
 
+def log_shape(msg,x):
+    if False:
+        print(msg,x.shape)
+
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -28,17 +32,25 @@ class Net(nn.Module):
     def forward(self, x):
         x = self.conv1(x)
         x = F.relu(x)
+        log_shape('CV1:',x)
         if save_map:
             feature_maps.append(x)
         x = self.conv2(x)
         x = F.relu(x)
+        log_shape('CV2:',x)
         x = F.max_pool2d(x, 2)
+        log_shape('Pool:',x)
         x = self.dropout1(x)
+        log_shape('Post Drop 1:',x)
         x = torch.flatten(x, 1)
+        log_shape('Flatten:',x)
         x = self.fc1(x)
         x = F.relu(x)
+        log_shape('Post FC 1:',x)
         x = self.dropout2(x)
+        log_shape('Post Drop 2:',x)
         x = self.fc2(x)
+        log_shape('Post FC 2:',x)
         output = F.log_softmax(x, dim=1)
         return output
 
@@ -147,6 +159,9 @@ second_eight = [x for x in train_data if x[1] == 0][1]
 
 train_loader = torch.utils.data.DataLoader(train_data,**train_kwargs)
 test_loader = torch.utils.data.DataLoader(test_data, **test_kwargs)
+
+model = Net()
+print(model)
 
 model = Net().to(device)
 optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
