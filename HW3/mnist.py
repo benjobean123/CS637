@@ -160,13 +160,7 @@ test_data = datasets.MNIST('../data', train=False,
 # note the second 8 sample from the training set for generating feature maps
 second_eight = [x for x in train_data if x[1] == 8][1]
 
-# Define indices for a subset (e.g., the first 1000 samples)
-subset_indices = list(range(1000))
-
-# Create a subset
-subset_dataset = torch.utils.data.Subset(train_data, subset_indices)
-
-train_loader = torch.utils.data.DataLoader(subset_dataset,**train_kwargs)
+train_loader = torch.utils.data.DataLoader(train_data,**train_kwargs)
 test_loader = torch.utils.data.DataLoader(test_data, **test_kwargs)
 
 model = Net()
@@ -197,10 +191,10 @@ for epoch in range(1, args.epochs + 1):
     save_map = True
     model(second_eight[0].unsqueeze(1)) # Breaks code
 
-    fig, axes = plt.subplots(nrows=4, ncols=4, figsize=(6, 6))
+    fig, axes = plt.subplots(nrows=8, ncols=4, figsize=(6, 6))
     for i, ax in enumerate(axes.flat):
-        if i < 16:
-            ax.imshow(feature_maps[0][i].detach().numpy(), cmap='gray')
+        if i < 32:
+            ax.imshow(feature_maps[0][0][i].detach().numpy(), cmap='gray')
             ax.axis('off')
         else:
             ax.axis('off')
