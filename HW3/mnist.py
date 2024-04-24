@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 
 # Should we save the feature map?
-save_map = True
+save_map = False
 feature_maps = []
 
 def log_shape(msg,x):
@@ -125,8 +125,10 @@ parser.add_argument('--log-interval', type=int, default=10, metavar='N',
 parser.add_argument('--save-model', action='store_true', default=True,
                     help='For Saving the current Model')
 args = parser.parse_args()
-use_cuda = not args.no_cuda and torch.cuda.is_available()
-use_mps = not args.no_mps and torch.backends.mps.is_available()
+#use_cuda = not args.no_cuda and torch.cuda.is_available()
+use_cuda = False
+#use_mps = not args.no_mps and torch.backends.mps.is_available()
+use_mps = False
 
 torch.manual_seed(args.seed)
 
@@ -156,11 +158,15 @@ test_data = datasets.MNIST('../data', train=False,
                     transform=transform)
 
 # note the second 8 sample from the training set for generating feature maps
-second_eight = [x for x in train_data if x[1] == 0][1]
-#print(second_eight[0].shape)
+second_eight = [x for x in train_data if x[1] == 8][1]
 
+# Define indices for a subset (e.g., the first 1000 samples)
+subset_indices = list(range(1000))
 
-train_loader = torch.utils.data.DataLoader(train_data,**train_kwargs)
+# Create a subset
+subset_dataset = torch.utils.data.Subset(train_data, subset_indices)
+
+train_loader = torch.utils.data.DataLoader(subset_dataset,**train_kwargs)
 test_loader = torch.utils.data.DataLoader(test_data, **test_kwargs)
 
 model = Net()
@@ -189,20 +195,20 @@ for epoch in range(1, args.epochs + 1):
 
     # Save the feature map for the second eight sample
     save_map = True
-    #model(second_eight[0]) # Breaks code
+    model(second_eight[0].unsqueeze(1)) # Breaks code
 
-    # fig, axes = plt.subplots(nrows=4, ncols=4, figsize=(6, 6))
-    # for i, ax in enumerate(axes.flat):
-    #     if i < 16:
-    #         ax.imshow(feature_maps[0][i].detach().numpy(), cmap='gray')
-    #         ax.axis('off')
-    #     else:
-    #         ax.axis('off')
-    # plt.savefig(f"mnist-epoch{epoch}.png")
-    # plt.close()
+    fig, axes = plt.subplots(nrows=4, ncols=4, figsize=(6, 6))
+    for i, ax in enumerate(axes.flat):
+        if i < 16:
+            ax.imshow(feature_maps[0][i].detach().numpy(), cmap='gray')
+            ax.axis('off')
+        else:
+            ax.axis('off')
+    plt.savefig(f"mnist-epoch{epoch}.png")
+    plt.close()
 
     feature_maps.clear()
-    # save_map = False
+    save_map = False
 
 if args.save_model:
     torch.save(model.state_dict(), "mnist_cnn.pt")
