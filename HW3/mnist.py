@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 
 # Should we save the feature map?
-save_map = False
+save_map = True
 feature_maps = []
 
 def log_shape(msg,x):
@@ -66,6 +66,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
         loss = F.nll_loss(output, target)
         loss.backward()
         optimizer.step()
+        # model(second_eight[0]) #might break
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
@@ -168,7 +169,11 @@ optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
 
 scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
 for epoch in range(1, args.epochs + 1):
+    
+    # Train the model
     train(args, model, device, train_loader, optimizer, epoch)
+    
+    # Save and load the model
     if args.save_model:
         torch.save(model.state_dict(), f'./models/mnist_cnn{epoch}.pt')
         print("\nModel Saved")
@@ -176,7 +181,7 @@ for epoch in range(1, args.epochs + 1):
         print("\nModel Loaded")
 
 
-
+    # Test the model
     test(model, device, test_loader)
     scheduler.step()
 
@@ -194,7 +199,7 @@ for epoch in range(1, args.epochs + 1):
     # plt.savefig(f"mnist-epoch{epoch}.png")
     # plt.close()
 
-    # feature_maps.clear()
+    feature_maps.clear()
     # save_map = False
 
 if args.save_model:
