@@ -119,7 +119,7 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='how many batches to wait before logging training status')
-parser.add_argument('--save-model', action='store_true', default=False,
+parser.add_argument('--save-model', action='store_true', default=True,
                     help='For Saving the current Model')
 args = parser.parse_args()
 use_cuda = not args.no_cuda and torch.cuda.is_available()
@@ -169,6 +169,14 @@ optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
 scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
 for epoch in range(1, args.epochs + 1):
     train(args, model, device, train_loader, optimizer, epoch)
+    if args.save_model:
+        torch.save(model.state_dict(), f'./models/mnist_cnn{epoch}.pt')
+        print("\nModel Saved")
+        torch.load(f'./models/mnist_cnn{epoch}.pt')
+        print("\nModel Loaded")
+
+
+
     test(model, device, test_loader)
     scheduler.step()
 
@@ -176,18 +184,18 @@ for epoch in range(1, args.epochs + 1):
     save_map = True
     #model(second_eight[0]) # Breaks code
 
-    fig, axes = plt.subplots(nrows=4, ncols=4, figsize=(6, 6))
-    for i, ax in enumerate(axes.flat):
-        if i < 16:
-            ax.imshow(feature_maps[0][i].detach().numpy(), cmap='gray')
-            ax.axis('off')
-        else:
-            ax.axis('off')
-    plt.savefig(f"mnist-epoch{epoch}.png")
-    plt.close()
+    # fig, axes = plt.subplots(nrows=4, ncols=4, figsize=(6, 6))
+    # for i, ax in enumerate(axes.flat):
+    #     if i < 16:
+    #         ax.imshow(feature_maps[0][i].detach().numpy(), cmap='gray')
+    #         ax.axis('off')
+    #     else:
+    #         ax.axis('off')
+    # plt.savefig(f"mnist-epoch{epoch}.png")
+    # plt.close()
 
-    feature_maps.clear()
-    save_map = False
+    # feature_maps.clear()
+    # save_map = False
 
 if args.save_model:
     torch.save(model.state_dict(), "mnist_cnn.pt")
