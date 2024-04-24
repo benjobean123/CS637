@@ -33,10 +33,12 @@ class Net(nn.Module):
         x = self.conv1(x)
         x = F.relu(x)
         log_shape('CV1:',x)
+        log_shape('CV1 Filters:', self.conv1.weight)
         if save_map:
             feature_maps.append(x)
         x = self.conv2(x)
         x = F.relu(x)
+        log_shape('CV2 Filters:', self.conv2.weight)
         log_shape('CV2:',x)
         x = F.max_pool2d(x, 2)
         log_shape('Pool:',x)
