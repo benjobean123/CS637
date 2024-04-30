@@ -60,7 +60,7 @@ learning_rate=1e-4
 
 # This loads different networks
 if model_arg == 0:
-    model = IndianPinesReLUNetwork()
+    model = IndianPinesReLUNetwork().to(device)
     model_name = 'IP_ReLU'
 elif model_arg == 1:
     model = IndianPinesLeakySmallNetwork(0.1).to(device)
