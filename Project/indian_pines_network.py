@@ -12,15 +12,13 @@ class IndianPinesReLUNetwork(nn.Module):
             nn.ReLU(),
             nn.Linear(32, 16),
         )
-        self.accuracy=0
 
     def forward(self, x):
         logits = self.linear_relu_stack(x)
         return logits
 
 
-
-class IndianPinesLeakyNetwork(nn.Module):
+class IndianPinesLeakySmallNetwork(nn.Module):
     def __init__(self, negative_slope=0.1):
         super().__init__()
         self.linear_relu_stack = nn.Sequential(
@@ -32,7 +30,55 @@ class IndianPinesLeakyNetwork(nn.Module):
             nn.LeakyReLU(negative_slope),
             nn.Linear(32, 16),
         )
-        self.accuracy=0
+
+    def forward(self, x):
+        logits = self.linear_relu_stack(x)
+        return logits
+
+
+class IndianPinesLeakyLargeNetwork(nn.Module):
+    def __init__(self, negative_slope=0.1):
+        super().__init__()
+        self.linear_relu_stack = nn.Sequential(
+            nn.Linear(200, 180),
+            nn.LeakyReLU(negative_slope),
+            nn.Linear(180, 150),
+            nn.LeakyReLU(negative_slope),
+            nn.Linear(150, 120),
+            nn.LeakyReLU(negative_slope),
+            nn.Linear(120, 90),
+            nn.LeakyReLU(negative_slope),
+            nn.Linear(90, 60),
+            nn.LeakyReLU(negative_slope),
+            nn.Linear(60, 30),
+            nn.LeakyReLU(negative_slope),
+            nn.Linear(30, 16),
+        )
+
+    def forward(self, x):
+        logits = self.linear_relu_stack(x)
+        return logits
+
+
+class IndianPinesLeakyFinalNetwork(nn.Module):
+    def __init__(self, negative_slope=0.1):
+        super().__init__()
+        self.linear_relu_stack = nn.Sequential(
+            nn.Linear(200, 180),
+            nn.LeakyReLU(negative_slope),
+            nn.Linear(180, 150),
+            nn.LeakyReLU(negative_slope),
+            nn.Dropout(0.4),
+            nn.Linear(150, 120),
+            nn.LeakyReLU(negative_slope),
+            nn.Linear(120, 90),
+            nn.LeakyReLU(negative_slope),
+            nn.Linear(90, 60),
+            nn.LeakyReLU(negative_slope),
+            nn.Linear(60, 30),
+            nn.LeakyReLU(negative_slope),
+            nn.Linear(30, 16),
+        )
 
     def forward(self, x):
         logits = self.linear_relu_stack(x)

@@ -1,12 +1,27 @@
 import matplotlib.pyplot as plt
 import torch
+import sys
 import os
-import numpy as np
 from torch import nn
 from torch.utils.data import random_split
 from indian_pines_dataset import IndianPinesDataset
 from indian_pines_network import *
 from torch.utils.data import DataLoader
+
+if len(sys.argv) == 3:
+    model_arg = int(sys.argv[1])
+    epoch_arg = int(sys.argv[2])
+elif len(sys.argv) == 2:
+    model_arg = int(sys.argv[1])
+    epoch_arg = 1000
+elif len(sys.argv) == 1:
+    model_arg = 3
+    epoch_arg = 1000
+else:
+    print("main.py [model [epochs]]")
+    print("model  = 0-3 (3 by default)")
+    print("epochs = positive integer (1000 by default)")
+    sys.exit(1)
 
 # Figure out what type of device we have
 device = (
@@ -20,10 +35,6 @@ print(f"Using {device} device")
 
 # Load the Indian Pines data
 ds = IndianPinesDataset()
-
-#print(ds)
-#print(len(ds))
-#print(ds[0])
 
 # 80/20 split? Why not
 training_size = int(0.8 * len(ds))
@@ -40,16 +51,28 @@ training_data, testing_data = random_split(ds, [training_size, testing_size])
 # to converge. Lots of epochs probably means we need
 # to add some dropout to prevent overfitting.
 batch_size=32
-epochs=1000
+epochs=epoch_arg
 
 # With more epochs, reducing the learning rate seems
 # to help
 learning_rate=1e-4
 
 # This loads different networks
-model = IndianPinesLeakyNetwork(0.1).to(device)
-#model = IndianPinesLeakyNetwork(0.01).to(device)
-#model = IndianPinesReLUNetwork().to(device)
+if model_arg == 0:
+    model = IndianPinesReLUNetwork()
+    model_name = 'IP_ReLU'
+elif model_arg == 1:
+    model = IndianPinesLeakySmallNetwork(0.1).to(device)
+    model_name = 'IP_SmallLeaky'
+elif model_arg == 2:
+    model = IndianPinesLeakyLargeNetwork(0.1).to(device)
+    model_name = 'IP_LargeLeaky'
+elif model_arg == 3:
+    model = IndianPinesLeakyFinalNetwork(0.1).to(device)
+    model_name = 'IP_FinalLeaky'
+else:
+    print("No model selected. Should be between 0-3")
+    sys.exit(1)
 
 #**********************************************************
 
@@ -112,22 +135,28 @@ def test(dataloader, model, loss_fn):
         torch.save(model.accuracy, "./BestModelAccuracy.pth") # save accuracy
 
 
+print(f'Starting Training of {model_name} over {epochs} Epochs\n')
+
 for t in range(epochs):
     print(f"Epoch {t+1} - ", end='')
     train(train_dataloader, model, loss_fn, optimizer)
     test(test_dataloader, model, loss_fn)
 
+print(f'\nFinished Training of {model_name} over {epochs} Epochs')
+
 bestAccuracy=torch.load("./BestModelAccuracy.pth")
 print(f"Best model accuracy: {bestAccuracy}")
+
+# Create the images folder if it does not exist
+if not os.path.exists('./images'):
+    os.mkdir('./images')
 
 # Plotting the loss curves
 plt.plot(range(1, epochs+1), train_losses, label='Training Loss')
 plt.plot(range(1, epochs+1), val_losses, label='Validation Loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
-plt.title('Training and Validation Loss Curves')
+plt.title(f'{model_name} - {epochs} Epochs - Training and Validation Loss Curves')
 plt.legend()
-plt.savefig(f"loss_curves.png")
+plt.savefig(f"./images/{model_name}_{epochs}E_loss_curves.png")
 plt.close()
-
-print("Done!")
