@@ -1,4 +1,5 @@
 import torch
+import os
 import numpy as np
 from torch import nn
 from torch.utils.data import random_split
@@ -38,11 +39,11 @@ training_data, testing_data = random_split(ds, [training_size, testing_size])
 # to converge. Lots of epochs probably means we need
 # to add some dropout to prevent overfitting.
 batch_size=32
-epochs=200
+epochs=1000
 
 # With more epochs, reducing the learning rate seems
 # to help
-learning_rate=1e-5
+learning_rate=1e-4 #5
 
 # This loads different networks
 model = IndianPinesLeakyNetwork(0.1).to(device)
@@ -90,10 +91,25 @@ def test(dataloader, model, loss_fn):
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
     test_loss /= num_batches
     correct /= size
+    model.accuracy=(round((100*correct), 2))
     print(f"Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f}")
+
+    ## Find best accuracy model
+    if(os.path.exists("./BestModel.pth") & os.path.exists("./BestModelAccuracy.pth")):
+        bestAccuracy=torch.load("./BestModelAccuracy.pth")
+        if(model.accuracy>bestAccuracy):
+            torch.save(model.state_dict(), "./BestModel.pth")
+            torch.save(model.accuracy, "./BestModelAccuracy.pth") # save accuracy
+    else:
+        torch.save(model.state_dict(), "./BestModel.pth") # save inital model
+        torch.save(model.accuracy, "./BestModelAccuracy.pth") # save accuracy
+
 
 for t in range(epochs):
     print(f"Epoch {t+1} - ", end='')
     train(train_dataloader, model, loss_fn, optimizer)
     test(test_dataloader, model, loss_fn)
+
+bestAccuracy=torch.load("./BestModelAccuracy.pth")
+print(f"Best model accuracy: {bestAccuracy}")
 print("Done!")

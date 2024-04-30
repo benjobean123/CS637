@@ -12,6 +12,7 @@ class IndianPinesReLUNetwork(nn.Module):
             nn.ReLU(),
             nn.Linear(32, 16),
         )
+        self.accuracy=0
 
     def forward(self, x):
         logits = self.linear_relu_stack(x)
@@ -31,6 +32,7 @@ class IndianPinesLeakyNetwork(nn.Module):
             nn.LeakyReLU(negative_slope),
             nn.Linear(32, 16),
         )
+        self.accuracy=0
 
     def forward(self, x):
         logits = self.linear_relu_stack(x)
