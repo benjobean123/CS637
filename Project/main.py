@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import torch
 import sys
 import os
@@ -84,12 +85,15 @@ loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 # Define lists to store training and validation losses
+train_accuracies = []
 train_losses = []
-val_losses = []
+test_accuracies = []
+test_losses = []
 
 def train(dataloader, model, loss_fn, optimizer):
+    size = len(dataloader.dataset)
     model.train()
-    running_loss = 0
+    running_loss, correct = 0, 0
     for _, (X, y) in enumerate(dataloader):
         X, y = X.to(device), y.to(device)
 
@@ -102,9 +106,14 @@ def train(dataloader, model, loss_fn, optimizer):
         optimizer.step()
         optimizer.zero_grad()
         running_loss += loss.item()
+        correct += (logits.argmax(1) == y).type(torch.float).sum().item()
 
     train_loss = running_loss / len(dataloader)
     train_losses.append(train_loss)
+
+    correct /= size
+    accuracy = 100*correct
+    train_accuracies.append(accuracy)
 
 def test(dataloader, model, loss_fn):
     size = len(dataloader.dataset)
@@ -119,10 +128,13 @@ def test(dataloader, model, loss_fn):
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
 
     test_loss /= num_batches
-    val_losses.append(test_loss)
+    test_losses.append(test_loss)
+
     correct /= size
-    model.accuracy=(round((100*correct), 2))
-    print(f"Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f}")
+    accuracy = 100*correct
+    test_accuracies.append(accuracy)
+    model.accuracy=(round(accuracy, 2))
+    print(f"Accuracy: {accuracy:>0.1f}%, Avg loss: {test_loss:>8f}")
 
     ## Find best accuracy model
     if(os.path.exists("./BestModel.pth") & os.path.exists("./BestModelAccuracy.pth")):
@@ -153,10 +165,30 @@ if not os.path.exists('./images'):
 
 # Plotting the loss curves
 plt.plot(range(1, epochs+1), train_losses, label='Training Loss')
-plt.plot(range(1, epochs+1), val_losses, label='Validation Loss')
+plt.plot(range(1, epochs+1), test_losses, label='Validation Loss')
 plt.xlabel('Epoch')
+# Format the x-axis ticks to display integers without decimal places
+plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter('%d'))
 plt.ylabel('Loss')
-plt.title(f'{model_name} - {epochs} Epochs - Training and Validation Loss Curves')
+plt.title(f'{model_name} over {epochs} Epochs - Loss Curves')
 plt.legend()
 plt.savefig(f"./images/{model_name}_{epochs}E_loss_curves.png")
+plt.close()
+
+# Plotting the accuracy curves
+plt.plot(range(1, epochs+1), train_accuracies, label='Training Accuracy')
+plt.plot(range(1, epochs+1), test_accuracies, label='Validation Accuracy')
+
+# Find the highest validation accuracy
+max_val_acc = max(test_accuracies)
+max_val_epoch = test_accuracies.index(max_val_acc) + 1  # adding 1 to match the epoch number
+
+plt.xlabel('Epoch')
+# Format the x-axis ticks to display integers without decimal places
+plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter('%d'))
+plt.ylabel('Accuracy')
+plt.title(f'{model_name} over {epochs} Epochs - Accuracy Curves')
+#plt.legend()
+plt.legend([f'Training Accuracy', f'Validation Accuracy (Max: {max_val_acc:.2f}%)'])
+plt.savefig(f"./images/{model_name}_{epochs}E_accuracy_curves.png")
 plt.close()
