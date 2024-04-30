@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import torch
 import os
 import numpy as np
@@ -43,7 +44,7 @@ epochs=1000
 
 # With more epochs, reducing the learning rate seems
 # to help
-learning_rate=1e-4 #5
+learning_rate=1e-4
 
 # This loads different networks
 model = IndianPinesLeakyNetwork(0.1).to(device)
@@ -59,10 +60,14 @@ test_dataloader = DataLoader(testing_data, batch_size=batch_size, shuffle=True)
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
+# Define lists to store training and validation losses
+train_losses = []
+val_losses = []
+
 def train(dataloader, model, loss_fn, optimizer):
-    size = len(dataloader.dataset)
     model.train()
-    for batch, (X, y) in enumerate(dataloader):
+    running_loss = 0
+    for _, (X, y) in enumerate(dataloader):
         X, y = X.to(device), y.to(device)
 
         # Compute prediction error
@@ -73,10 +78,10 @@ def train(dataloader, model, loss_fn, optimizer):
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
+        running_loss += loss.item()
 
-        #if batch % size == 0:
-            #loss, current = loss.item(), (batch + 1) * len(X)
-            #print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+    train_loss = running_loss / len(dataloader)
+    train_losses.append(train_loss)
 
 def test(dataloader, model, loss_fn):
     size = len(dataloader.dataset)
@@ -89,7 +94,9 @@ def test(dataloader, model, loss_fn):
             pred = model(X)
             test_loss += loss_fn(pred, y).item()
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+
     test_loss /= num_batches
+    val_losses.append(test_loss)
     correct /= size
     model.accuracy=(round((100*correct), 2))
     print(f"Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f}")
@@ -112,4 +119,15 @@ for t in range(epochs):
 
 bestAccuracy=torch.load("./BestModelAccuracy.pth")
 print(f"Best model accuracy: {bestAccuracy}")
+
+# Plotting the loss curves
+plt.plot(range(1, epochs+1), train_losses, label='Training Loss')
+plt.plot(range(1, epochs+1), val_losses, label='Validation Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.title('Training and Validation Loss Curves')
+plt.legend()
+plt.savefig(f"loss_curves.png")
+plt.close()
+
 print("Done!")
