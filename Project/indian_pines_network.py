@@ -1,3 +1,6 @@
+# CS637 Final Project Spring 2024
+# Ben Davis and Brad Hester
+
 from torch import nn
 
 class IndianPinesReLUNetwork(nn.Module):

@@ -1,3 +1,6 @@
+# CS637 Final Project Spring 2024
+# Ben Davis and Brad Hester
+
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import torch
@@ -188,7 +191,6 @@ plt.xlabel('Epoch')
 plt.gca().xaxis.set_major_formatter(ticker.FormatStrFormatter('%d'))
 plt.ylabel('Accuracy')
 plt.title(f'{model_name} over {epochs} Epochs - Accuracy Curves')
-#plt.legend()
 plt.legend([f'Training Accuracy', f'Validation Accuracy (Max: {max_val_acc:.2f}%)'])
 plt.savefig(f"./images/{model_name}_{epochs}E_accuracy_curves.png")
 plt.close()
